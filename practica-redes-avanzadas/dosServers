@@ -1,0 +1,6 @@
+systemctl start haproxy & 
+systemctl status haproxy &
+node 1-SSR-master-server-main/app.js & 
+node 2-SSR-master-server-main/app.js &
+
+

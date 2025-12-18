@@ -1,0 +1,52 @@
+En ubuntu(ssh 10.100.0.123, contraseña:alumno):
+haproxy: sudo apt install haproxy (faltaría configurarlo y ejecutarlo)
+
+apt-get update
+apt-get upgrade (se quedó pillado al cabo de un rato)
+
+apt-get install nodejs
+
+postman ya estaba instalado (snap install postman)
+
+duplicamos la carpeta del servidor, en app.js de uno conectamos al puerto 5000 y en la app.js del otro lo conectamos al puerto 5001
+
+/// ejecutamos ambas paralelamente (preferiblemente mediante un script)
+
+iniciamos haproxy: sudo systemctl start haproxy
+comprobamos su estado: sudo systemctl status haproxy
+detenerlo: sudo systemctl stop haproxy
+systemctl restart haproxy
+
+config de haproxy modificada, frontend y backend añadidos
+Puerto haproxy: 5500
+Server1: 5001
+Server2: 5002
+Mejorable puertos, pero bueno
+Actualizado el node al 20.X
+
+Instalado docker
+Instalado emqx en docker (en nuestro broker, entonces nuestro publicadores publicarán ahí y nuestros subscriptores se suscribiran ahí)
+docker run -d --name emqx -p 1883:1883 -p 8083:8083 -p 8084:8084 -p 8883:8883 -p 18083:18083 emqx/emqx:latest
+docker ps (para saber si el contenedor funciona)
+https://github.com/emqx/emqx/blob/master/README.md
+
+1 servidor ya publica, broker funcionando
+
+creado listener mqtt-cratedb
+
+docker run -d --name cratedb -p 4200:4200 -p 5432:5432 crate -Cdiscovery.type=single-node
+
+para ver que servicio se ejecuta en un puerto: sudo lsof -i :5001
+para matar el proceso en ese puerto: sudo kill -9 <PID>
+
+
+tenemos problemas con el git, ramas divergentes, lo típico. Probablemente la solución es eliminar la carpeta del ubuntu, clonarla de nuevo, instalar todas las dependencias, add, commit, push, y desde el windows pull
+
+
+tengo una maquina ubuntu sin interfaz gráfica, le he instalado cratedb (creo que en un docker, pero puede ser que no), Quiero que cratedb se comunique con grafana, un servicio de visualización de datos. Cómo lo hago?
+
+Hemos pasado del docker y hemos intalado cratedb directamente en ubuntu y hemos intentado descargar emqx, pero no lo conseguimos.
+
+emqx start
+
+grafana lanzado, urlGrafana = 10.100.0.123:3000		user = admin		psswrd = admin

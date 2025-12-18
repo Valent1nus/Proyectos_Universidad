@@ -1,0 +1,24 @@
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="Middleware de Persistencia MQTT → CrateDB" />
+
+  <resources base="mqtt://localhost:1883/">
+    <resource path="sensores/datos">
+      <method name="SUBSCRIBE">
+        <doc>Suscripción a mensajes MQTT para almacenar datos en CrateDB.</doc>
+        <request>
+          <representation mediaType="application/json">
+            <param name="id_nodo" type="xs:string" style="plain"/>
+            <param name="timeStamp" type="xs:long" style="plain"/>
+            <param name="temperatura" type="xs:float" style="plain"/>
+            <param name="humedad" type="xs:float" style="plain"/>
+            <param name="co2" type="xs:float" style="plain"/>
+            <param name="volatiles" type="xs:float" style="plain"/>
+          </representation>
+        </request>
+        <response>
+          <doc>Datos insertados en CrateDB (tabla sensores_datos).</doc>
+        </response>
+      </method>
+    </resource>
+  </resources>
+</application>

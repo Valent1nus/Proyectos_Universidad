@@ -1,0 +1,103 @@
+import random
+import pandas as pd
+import os
+from src.pokemon import Pokemon, crear_pokemon_por_id
+
+
+def cargar_csv(csv_file):
+    return pd.read_csv(csv_file)
+
+def elegir_pokemon(csv_file_p, csv_file_a):
+    df_pokemon = cargar_csv(csv_file_p)
+    df_attack = cargar_csv(csv_file_a)
+    pokemon_nombres = df_pokemon['Name'].tolist()  # Nombre de los Pokémon en el CSV
+    print("Elige tu Pokémon:")
+    for i, nombre in enumerate(pokemon_nombres, 1):
+        print(f"{i}. {nombre}")
+    eleccion = int(input("Ingresa el número de tu elección: "))
+    if 1 <= eleccion <= len(pokemon_nombres):
+        pokemon_elegido = crear_pokemon_por_id(df_pokemon, df_attack, eleccion)
+        return pokemon_elegido
+    else:
+        print("Elección inválida.")
+        return None
+
+
+def calcular_dano(atacante, defensor, ataque):
+    N = 100  # Nivel del Pokémon atacante
+    B = 1  # Bonificación del mismo tipo
+    V = random.randint(85, 100)  # Variación de daño
+    P = ataque.power  # Potencia del ataque
+    E = 1  # Efectividad inicial, modificable si se agregan tablas de efectividad
+    if ataque.category == 'Physical':
+        A = atacante.attack
+        D = defensor.defense
+    if ataque.category == 'Special':
+        A = atacante.sp_attack
+        D = defensor.sp_defense
+
+    if ataque.type in [atacante.type1, atacante.type2]:
+        B = 1.5
+    dano = 0.01 * B * E * V * (((0.2 * N + 1) * A * P) / (25 * D) + 2)
+    return int(dano)
+
+
+def turno_jugador(jugador, enemigo):
+    atacante = jugador['pokemon']
+    defensor = enemigo['pokemon']
+    print(f"\nTurno de {jugador['nombre']} ({atacante.nombre}):")
+    print("Elige un ataque:")
+    for i, ataque in enumerate(atacante.attack_list, 1):  # Suponiendo que los ataques están en `attacks`
+        print(f"{i}. {ataque.name} ({ataque.type} - {ataque.category}): Potencia {ataque.power}")
+
+    while True:
+        eleccion = int(input("Ingresa el número del ataque: "))
+        if 1 <= eleccion <= len(atacante.attack_list):
+            ataque_seleccionado = atacante.attack_list[eleccion - 1]
+            break
+        else:
+            print("Elección inválida. Intenta de nuevo.")
+    accuracy = ataque_seleccionado.accuracy
+    if random.uniform(0, 100) > accuracy:
+        print(f"¡{atacante.nombre} usó {ataque_seleccionado.name} pero falló!")
+        return False
+    dano = calcular_dano(atacante, defensor, ataque_seleccionado)
+    enemigo['vida'] -= dano
+    print(f"¡{atacante.nombre} usó {ataque_seleccionado.name} e infligió {dano} de daño!")
+    if enemigo['vida'] <= 0:
+        print(f"¡{defensor.nombre} ha sido derrotado!")
+        return True
+    return False
+
+def juego():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path_pokemons = os.path.join(base_dir, "../pokemons/gen01.csv")
+    csv_path_attacks = os.path.join(base_dir, "../pokemons/attacks01.csv")
+    # Configurar jugadores
+    jugador1 = {
+        "nombre": input("Jugador 1, ingresa tu nombre: "),
+        "pokemon": elegir_pokemon(csv_path_pokemons, csv_path_attacks),
+    }
+    jugador2 = {
+        "nombre": "IA malévola",
+        "pokemon": elegir_pokemon(csv_path_pokemons, csv_path_attacks),
+    }
+    # Actualizar los jugadores con los atributos del Pokémon elegido
+    jugador1['vida'] = jugador1['pokemon'].hp_max
+    jugador1['ataque'] = jugador1['pokemon'].attack
+    jugador2['vida'] = jugador2['pokemon'].hp_max
+    jugador2['ataque'] = jugador2['pokemon'].attack
+
+    print(f"\n¡Comienza la batalla entre {jugador1['pokemon'].nombre} y {jugador2['pokemon'].nombre}!")
+    # Ciclo de batalla
+    while True:
+        if turno_jugador(jugador1, jugador2):
+            print(f"\n¡{jugador1['nombre']} gana!")
+            break
+        if turno_jugador(jugador2, jugador1):
+            print(f"\n¡{jugador2['nombre']} gana!")
+            break
+
+# Ejecutar el juego
+if __name__ == "__main__":
+    juego()

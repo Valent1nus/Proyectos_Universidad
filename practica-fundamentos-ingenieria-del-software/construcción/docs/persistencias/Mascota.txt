@@ -1,0 +1,2 @@
+1234567890_nombre1_12_raza1_especie1_49_ubi1_horaio1
+123456789012345_nombre2_13_raza2_especie2_50_ubi1_horaio2

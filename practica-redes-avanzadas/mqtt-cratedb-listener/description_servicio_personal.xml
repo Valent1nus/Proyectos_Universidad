@@ -1,0 +1,29 @@
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="Servicio de medias de sensores" />
+
+  <resources base="http://localhost:8080/">
+    <resource path="medias">
+      <method name="GET">
+        <doc>
+          Calcula y devuelve las medias de temperatura, humedad, CO2 y compuestos volátiles 
+          de los últimos 10 minutos en formato XML.
+        </doc>
+        <response>
+          <representation mediaType="application/xml">
+            <doc>Respuesta XML con los valores medios.</doc>
+            <example>
+              <![CDATA[
+<medias>
+  <temperatura>23.4</temperatura>
+  <humedad>60.2</humedad>
+  <co2>480.5</co2>
+  <volatiles>0.98</volatiles>
+</medias>
+              ]]>
+            </example>
+          </representation>
+        </response>
+      </method>
+    </resource>
+  </resources>
+</application>
