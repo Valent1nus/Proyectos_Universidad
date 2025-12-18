@@ -1,0 +1,17 @@
+-- Sample task set
+task set Sample with 4 tasks and 4 locks is
+-- locks
+    lock Pitch-Roll-Command;
+    lock Current-Speed;
+    lock Roll-Maniobra-Colision;
+    lock record-Status;
+-- tasks
+    task Display is periodic (2, 1000, 0, 0, 134, 0, 0, 1000, 0)
+        uses record-Status (134);
+    task Speed is periodic (3, 300, 0, 0, 26, 0, 0, 300, 0)
+        uses Pitch-Roll-Command (18), Current-Speed (18), record-Status (18);
+    task PosAlt-Control is periodic (4, 200, 0, 0, 47, 0, 0, 200, 0)
+        uses Pitch-Roll-Command (27), Roll-Maniobra-Colision (29), record-Status (24);
+    task Collision is periodic (5, 250, 0, 0, 18, 0, 0, 250, 0)
+        uses Current-Speed (21), Roll-Maniobra-Colision (26), record-Status (21);
+end Sample;

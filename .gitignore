@@ -1,0 +1,32 @@
+# Binarios y compilados
+*.exe
+*.o
+*.out
+*.class
+
+# Carpetas típicas
+node_modules/
+dist/
+build/
+target/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Vivado / FPGA
+*.jou
+*.log
+*.str
+*.cache/
+*.runs/
+*.sim/
+
+# Python
+__pycache__/
+*.pyc
+
+# Sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,26 @@
+
+
+Response time analysis for task set Sample
+------------------------------------------
+
+Id Task      A PR  Period  Offset  Jitter  Budget   Block Deadline Response Sch
+-- --------- - -- ------- ------- ------- ------- ------- -------- -------- ---
+ 1 PosAlt-ConP  4 200.000   0.000   0.000  47.000 134.000  200.000  181.000 Yes
+ 2 Collision P  3 250.000   0.000   0.000  18.000 134.000  250.000  199.000 Yes
+ 3 Speed     P  2 300.000   0.000   0.000  26.000 134.000  300.000  290.000 Yes
+ 4 Display   P  11000.000   0.000   0.000 134.000   0.000 1000.000  290.000 Yes
+
+
+Priority ceilings for shared resources
+--------------------------------------
+
+Id Name      PR
+-- --------- --
+ 1 Roll-Manio 4
+ 2 record-Sta 4
+ 3 Pitch-Roll 4
+ 4 Current-Sp 3
+
+
+Total processor utilization :  52.77%
+
