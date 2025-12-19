@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/system_manager.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/spi_soft_lib.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/pwm_lib.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/i2c_lib.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/adc_lib.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/pwm_lib.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/comm_lib.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/adc_lib.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/i2c_lib.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/comm_lib.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/spi_soft_lib.c</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/system_manager.h</file>
+            <file>file:/home/alumno/Escritorio/m41-lab/Proyecto_SMA/main.c</file>
+        </group>
+    </open-files>
+</project-private>
