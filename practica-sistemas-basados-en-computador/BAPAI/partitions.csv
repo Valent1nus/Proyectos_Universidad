@@ -1,0 +1,15 @@
+# Name,   Type, SubType, Offset,   Size,     Flags
+#
+# El Offset 0x8000 es donde se escribe la tabla de particiones
+#
+nvs,      data, nvs,     0x9000,   0x5000, 
+otadata,  data, ota,     0xe000,   0x2000,   
+phy_init, data, phy,     0x10000,  0x1000,   
+#
+# Particiones de APLICACIÓN OTA: 1.5M (1536K o 0x180000)
+# Tamaño total de ambas apps: 3M
+ota_0,    app,  ota_0,   0x20000,  1536K,
+ota_1,    app,  ota_1,   0x1A0000, 1536K,
+#
+# Partición de Almacenamiento (opcional, pero hay espacio)
+storage,  data, spiffs,  0x320000, 800K,

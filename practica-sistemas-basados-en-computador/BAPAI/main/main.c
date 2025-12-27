@@ -1,0 +1,208 @@
+#include <stdio.h>
+#include <string.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "nvs_flash.h"
+
+#include "mqtt_client.h"
+#include "cJSON.h"
+
+#include "soc/gpio_num.h"
+
+#include "wifi_manager.h"
+#include "bme280_sensor.h"
+#include "pirtest.h"
+#include "MQ135test.h"
+#include "simple_ota_example.h"
+
+
+
+#define TAG "BME280_TEST"
+
+
+static void log_error_if_nonzero(const char *message, int error_code)
+{
+    if (error_code != 0) {
+        ESP_LOGE(TAG, "Last error %s: 0x%x", message, error_code);
+    }
+}
+
+/*
+ * @brief Event handler registered to receive MQTT events
+ *
+ *  This function is called by the MQTT client event loop.
+ *
+ * @param handler_args user data registered to the event.
+ * @param base Event base for the handler(always MQTT Base in this example).
+ * @param event_id The id for the received event.
+ * @param event_data The data for the event, esp_mqtt_event_handle_t.
+ */
+
+
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32 "", base, event_id);
+    esp_mqtt_event_handle_t event = event_data;
+    esp_mqtt_client_handle_t client = event->client;
+    int msg_id;
+    switch ((esp_mqtt_event_id_t)event_id) {
+    case MQTT_EVENT_CONNECTED:
+        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
+        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+
+        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+        msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
+        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+        break;
+    case MQTT_EVENT_DISCONNECTED:
+        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+        break;
+
+    case MQTT_EVENT_SUBSCRIBED:
+        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
+        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        break;
+    case MQTT_EVENT_UNSUBSCRIBED:
+        ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+        break;
+    case MQTT_EVENT_PUBLISHED:
+        ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+        break;
+    case MQTT_EVENT_DATA:
+        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+        printf("DATA=%.*s\r\n", event->data_len, event->data);
+        break;
+    case MQTT_EVENT_ERROR:
+        ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+            log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
+            log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
+            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
+            ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
+
+        }
+        break;
+    default:
+        ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+        break;
+    }
+}
+
+void mqtt_app_start(void)
+{
+
+	esp_mqtt_client_config_t mqtt_cfg = {
+		.broker.address.uri = "mqtt://thingsboard.cloud",
+		.broker.address.port = 1883,
+		.credentials.username = "kytMdWldW0BbTziQHuf1" //token
+	};
+	// Establecer la conexión
+	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
+	esp_mqtt_client_start(client);
+	float temp,hum,press,calidad = 0;
+	int level = 0;
+	while(1) {
+				
+	    level = pir_task();
+	   
+	    if (level == 1) {
+	        printf("Fuego!\n");
+	    }else {
+			printf("no hay fuego\n");
+		}
+			    
+        temp = bme280_get_temp();
+        hum = bme280_get_hum();
+        press = bme280_get_press();
+
+        printf( "T=%.2f  H=%.2f  P=%.2f hPa\n", 
+                 temp, hum, press);
+	
+		calidad = mq135_task();
+		
+		printf("Calidad del aire: %f\n", calidad);
+	    // Crear json que se quiere enviar al ThingsBoard
+		cJSON *root = cJSON_CreateObject();
+		
+		cJSON_AddNumberToObject(root, "humidity", hum );
+		cJSON_AddNumberToObject(root, "temperature", temp);
+		cJSON_AddNumberToObject(root, "pressure", press);
+		cJSON_AddNumberToObject(root, "co2", calidad);
+		cJSON_AddNumberToObject(root, "movement", level);
+	    char *post_data = cJSON_PrintUnformatted(root);	
+		    
+		        // Enviar los datos
+	    esp_mqtt_client_publish(client, "v1/devices/me/telemetry", post_data, 0, 1,
+	                            0); // v1/devices/me/telemetry sale de la MQTT
+	                                // Device API Reference de ThingsBoard
+	    cJSON_Delete(root);
+	    // Free is intentional, it's client responsibility to free the result of
+	    // cJSON_Print
+	    free(post_data);
+	    
+        vTaskDelay(pdMS_TO_TICKS(2000)); // leer cada 2 segundos
+    }
+
+}
+void app_main(void)
+{ 
+    ESP_LOGI(TAG, "[APP] Startup..");
+    ESP_LOGI(TAG, "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
+    ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
+
+    esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("mqtt_client", ESP_LOG_VERBOSE);
+    esp_log_level_set("mqtt_example", ESP_LOG_VERBOSE);
+    esp_log_level_set("transport_base", ESP_LOG_VERBOSE);
+    esp_log_level_set("esp-tls", ESP_LOG_VERBOSE);
+    esp_log_level_set("transport", ESP_LOG_VERBOSE);
+    esp_log_level_set("outbox", ESP_LOG_VERBOSE);
+    esp_err_t ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+	    ESP_ERROR_CHECK(nvs_flash_erase());   // BORRA NVS
+	    ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(ret);
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    
+    wifi_manager_init();
+
+    // Si no hay WiFi, el manager levanta AP+server y reinicia tras guardar.
+    // Aquí, para mantener la funcionalidad y no arrancar MQTT sin internet:
+    if (!wifi_manager_wait_connected(pdMS_TO_TICKS(20000))) {
+        ESP_LOGW(TAG, "Sin WiFi todavía. AP de configuración activo. Esperando reinicio tras configurar...");
+        while (1) vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    
+    bme280_sensor_start();
+
+	pir_start();
+
+	mq135_start();   
+	
+	ota_manager_start(6144, 5);
+	
+	vTaskDelay(pdMS_TO_TICKS(5000));
+	
+	mqtt_app_start();
+	
+    
+}
+
+
